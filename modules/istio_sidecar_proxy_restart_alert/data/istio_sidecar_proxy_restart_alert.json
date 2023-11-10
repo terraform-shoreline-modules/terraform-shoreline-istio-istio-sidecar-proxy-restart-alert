@@ -1,0 +1,130 @@
+{
+  "name": "istio_sidecar_proxy_restart_alert",
+  "description": "This incident type refers to an alert triggered when the sidecar proxy of Istio, a popular service mesh for microservices, restarts unexpectedly. The sidecar proxy is a crucial component that handles traffic between microservices and the Istio control plane. Restarting unexpectedly can cause disruptions in the communication between microservices, leading to potential service outages and performance issues.",
+  "params": [
+    {
+      "name": "RESOURCE_LIMIT",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    },
+    {
+      "name": "ISTIO_CITADEL_POD_NAME",
+      "value": ""
+    },
+    {
+      "name": "POD_NAME",
+      "value": ""
+    },
+    {
+      "name": "DEPLOYMENT_NAME",
+      "value": ""
+    },
+    {
+      "name": "ISTIO_PILOT_POD_NAME",
+      "value": ""
+    },
+    {
+      "name": "RESOURCE_REQUEST",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Istio Sidecar Proxy Restart Alert\nThis incident type refers to an alert triggered when the sidecar proxy of Istio, a popular service mesh for microservices, restarts unexpectedly. The sidecar proxy is a crucial component that handles traffic between microservices and the Istio control plane. Restarting unexpectedly can cause disruptions in the communication between microservices, leading to potential service outages and performance issues."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## List all pods in the namespace where the incident occurred"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get pods -n ${NAMESPACE}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Get the logs for the Istio sidecar proxy container in a problematic pod"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl logs ${POD_NAME} -c istio-proxy -n ${NAMESPACE}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the events related to the pod"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl describe pod ${POD_NAME} -n ${NAMESPACE}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Istio sidecar proxy container in the pod"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get pod ${POD_NAME} -n ${NAMESPACE} -o jsonpath='{.status.containerStatuses[?(@.name==\"istio-proxy\")].state}'`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the logs of the Istio Pilot container in the control plane"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl logs ${ISTIO_PILOT_POD_NAME} -c discovery -n ${NAMESPACE}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the logs of the Istio Citadel container in the control plane"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl logs ${ISTIO_CITADEL_POD_NAME} -c citadel -n ${NAMESPACE}`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the resources allocated to the Istio Sidecar Proxy. If the pod is running out of memory or CPU, increase the allocated resources or adjust the resource quotas to deployment and ensure sufficient resources are available."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_resource_limit_patch($RESOURCE_LIMIT, $NAMESPACE, $DEPLOYMENT_NAME, $RESOURCE_REQUEST)"
+    }
+  ]
+}
